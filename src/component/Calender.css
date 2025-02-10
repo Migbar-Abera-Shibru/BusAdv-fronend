@@ -1,0 +1,75 @@
+.calendar-container {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  .calendar-title {
+    text-align: center;
+    font-size: 32px;
+    color: #333;
+  }
+  
+  .sign-in-btn {
+    display: block;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    margin: 20px auto;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .sign-in-btn:hover {
+    background-color: #45a049;
+  }
+  
+  .calendar-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding-top: 20px;
+  }
+  
+  .event-card {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+  
+  .event-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .event-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .event-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2e2e2e;
+  }
+  
+  .event-time {
+    font-size: 14px;
+    color: #757575;
+  }
+  
+  .event-description {
+    color: #555;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
