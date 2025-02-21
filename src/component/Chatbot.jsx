@@ -204,20 +204,19 @@ const Chatbot = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/chat", {
-        message: input,
-      });
+        const response = await axios.post("http://localhost:5000/api/chat", { message: input });
 
-      const botMessage = { sender: "bot", text: response.data.response };
-      setMessages((prev) => [...prev, botMessage]);
+        const botMessage = { sender: "bot", text: response.data.response };
+        setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      const errorMessage = { sender: "bot", text: "Error: Unable to get a response." };
-      setMessages((prev) => [...prev, errorMessage]);
+        console.error("Error:", error.response?.data || error.message);
+        const errorMessage = { sender: "bot", text: "Error: Unable to get a response." };
+        setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setLoading(false);
-      setInput("");
+        setLoading(false);
+        setInput("");
     }
-  };
+};
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
