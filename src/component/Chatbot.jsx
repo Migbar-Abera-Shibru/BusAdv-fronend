@@ -172,7 +172,7 @@ const Input = styled.input`
 `;
 
 const FileInput = styled.input`
-  margin-right: 10px;
+  display: none;
 `;
 
 const Button = styled.button`
@@ -189,46 +189,90 @@ const Button = styled.button`
   }
 `;
 
+const FilePreview = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+`;
+
+const FileName = styled.span`
+  font-size: 0.9rem;
+  color: ${(props) => props.theme.text};
+`;
+
+const RemoveFileButton = styled.button`
+  background-color: transparent;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-size: 0.9rem;
+`;
+
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [file, setFile] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
+const sendMessage = async () => {
+  if (!input.trim() && !file) return;
 
-    const userMessage = { sender: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
+  const userMessage = { sender: "user", text: input };
+  setMessages((prev) => [...prev, userMessage]);
 
-    setLoading(true);
-    try {
-        const response = await axios.post("http://localhost:5000/api/chat", { message: input });
+  setLoading(true);
+  try {
+    let response;
 
-        const botMessage = { sender: "bot", text: response.data.response };
-        setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-        console.error("Error:", error.response?.data || error.message);
-        const errorMessage = { sender: "bot", text: "Error: Unable to get a response." };
-        setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-        setLoading(false);
-        setInput("");
-    }
-};
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
     if (file) {
-      const userMessage = { sender: "user", text: `Uploaded: ${file.name}` };
-      setMessages((prev) => [...prev, userMessage]);
+      // If a file is uploaded, use the /api/upload endpoint
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("prompt", input);
 
-      setTimeout(() => {
-        const botMessage = { sender: "bot", text: `Received file: ${file.name}` };
-        setMessages((prev) => [...prev, botMessage]);
-      }, 500);
+      response = await axios.post("http://localhost:5000/api/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+    } else {
+      // If no file is uploaded, use the /api/chat endpoint
+      response = await axios.post("http://localhost:5000/api/chat", {
+        message: input,
+      });
     }
+
+    // Handle the response
+    const botMessage = { sender: "bot", text: response.data.response || response.data.message };
+    setMessages((prev) => [...prev, botMessage]);
+
+    if (response.data.summary) {
+      const summaryMessage = { sender: "bot", text: `Summary: ${response.data.summary}` };
+      setMessages((prev) => [...prev, summaryMessage]);
+    }
+  } catch (error) {
+    console.error("Error:", error.response?.data || error.message);
+    const errorMessage = { sender: "bot", text: "Error: Unable to process your request." };
+    setMessages((prev) => [...prev, errorMessage]);
+  } finally {
+    setLoading(false);
+    setInput("");
+    setFile(null);
+  }
+};
+  
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
+  };
+
+  const removeFile = () => {
+    setFile(null);
   };
 
   const clearHistory = () => {
@@ -292,16 +336,28 @@ const Chatbot = () => {
           </MessageList>
 
           <InputContainer>
-            <FileInput type="file" onChange={handleFileUpload} />
+            <label htmlFor="file-upload">
+              <Button as="span">Attach File</Button>
+            </label>
+            <FileInput
+              id="file-upload"
+              type="file"
+              onChange={handleFileChange}
+              accept=".pdf"
+            />
+            {file && (
+              <FilePreview>
+                <FileName>{file.name}</FileName>
+                <RemoveFileButton onClick={removeFile}>Remove</RemoveFileButton>
+              </FilePreview>
+            )}
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message..."
             />
             <Button onClick={sendMessage}>&#9658;</Button>
-            <Button danger onClick={clearHistory}>
-              Clear History
-            </Button>
+            <Button onClick={clearHistory}>Clear History</Button>
           </InputContainer>
         </ChatContainer>
         <Button onClick={goToCalendar} style={{ marginTop: "20px" }}>
