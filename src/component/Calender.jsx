@@ -55,7 +55,7 @@ const Calendar = () => {
                   <div className="event-header">
                     <span className="event-title">{event.summary}</span>
                     <span className="event-time">
-                      {new Date(event.start.dateTime || event.start.date).toLocaleString()}
+                      {new Date(event.start).toLocaleString()}
                     </span>
                   </div>
                   <p className="event-description">

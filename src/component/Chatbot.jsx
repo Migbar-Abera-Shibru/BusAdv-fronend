@@ -217,53 +217,67 @@ const Chatbot = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-const sendMessage = async () => {
-  if (!input.trim() && !file) return;
-
-  const userMessage = { sender: "user", text: input };
-  setMessages((prev) => [...prev, userMessage]);
-
-  setLoading(true);
-  try {
-    let response;
-
-    if (file) {
-      // If a file is uploaded, use the /api/upload endpoint
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("prompt", input);
-
-      response = await axios.post("http://localhost:5000/api/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-    } else {
-      // If no file is uploaded, use the /api/chat endpoint
-      response = await axios.post("http://localhost:5000/api/chat", {
-        message: input,
-      });
-    }
-
-    // Handle the response
-    const botMessage = { sender: "bot", text: response.data.response || response.data.message };
-    setMessages((prev) => [...prev, botMessage]);
-
-    if (response.data.summary) {
-      const summaryMessage = { sender: "bot", text: `Summary: ${response.data.summary}` };
-      setMessages((prev) => [...prev, summaryMessage]);
-    }
-  } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
-    const errorMessage = { sender: "bot", text: "Error: Unable to process your request." };
-    setMessages((prev) => [...prev, errorMessage]);
-  } finally {
-    setLoading(false);
-    setInput("");
-    setFile(null);
-  }
-};
+  const sendMessage = async () => {
+    if (!input.trim() && !file) return;
   
+    const userMessage = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
+  
+    setLoading(true);
+    try {
+      let response;
+  
+      if (file) {
+        // If a file is uploaded, use the /api/upload endpoint
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("prompt", input);
+  
+        response = await axios.post("http://localhost:5000/api/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } else if (input.toLowerCase().includes("search")) {
+        // If the input contains "search", use the /api/search endpoint
+        response = await axios.post("http://localhost:5000/api/search", {
+          query: input.replace("search", "").trim(),
+        });
+      } else {
+        // If no file is uploaded, use the /api/chat endpoint
+        response = await axios.post("http://localhost:5000/api/chat", {
+          message: input,
+        });
+      }
+  
+      // Handle the response
+      if (response.data.results) {
+        // Display search results
+        const searchResults = response.data.results.map((result) => ({
+          sender: "bot",
+          text: `Document ID: ${result.id}\nRelevance Score: ${result.score}\nText: ${result.text}`,
+        }));
+        setMessages((prev) => [...prev, ...searchResults]);
+      } else {
+        const botMessage = { sender: "bot", text: response.data.response || response.data.message };
+        setMessages((prev) => [...prev, botMessage]);
+  
+        if (response.data.summary) {
+          const summaryMessage = { sender: "bot", text: `Summary: ${response.data.summary}` };
+          setMessages((prev) => [...prev, summaryMessage]);
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+      const errorMessage = { sender: "bot", text: "Error: Unable to process your request." };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+      setInput("");
+      setFile(null);
+    }
+  };
+    
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
